@@ -4,7 +4,7 @@ import Navbar from './components/Navbar';
 function App() {
   return (
     <div style={{
-      backgroundColor: '#000000',
+      backgroundColor: '#000B14',
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',

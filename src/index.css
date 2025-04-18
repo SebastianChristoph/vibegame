@@ -1,11 +1,11 @@
 :root {
-  font-family: 'Courier New', monospace;
+  font-family: 'Share Tech Mono', monospace;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: dark;
-  color: #00ff00;
-  background-color: #000000;
+  color: #FFFFFF;
+  background-color: #000B14;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,12 +13,38 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #000B14;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Orbitron', sans-serif;
+}
+
+button {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 #root {

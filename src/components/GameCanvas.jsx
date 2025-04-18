@@ -26,19 +26,19 @@ class MainScene extends Phaser.Scene {
     const y = this.mainComputer.y - 60;
 
     // Create container rectangle with border
-    this.ramBarContainer = this.add.rectangle(x + barWidth/2, y, barWidth, barHeight, 0x000000);
-    this.ramBarContainer.setStrokeStyle(2, 0x00ff00);
-    this.ramBarContainer.setDepth(1); // Above computer
+    this.ramBarContainer = this.add.rectangle(x + barWidth/2, y, barWidth, barHeight, 0x001B34);
+    this.ramBarContainer.setStrokeStyle(2, 0x0099FF);
+    this.ramBarContainer.setDepth(1);
 
-    // Create the dark green background (available RAM)
-    this.ramBarAvailable = this.add.rectangle(x, y, barWidth, barHeight, 0x006600);
+    // Create the dark blue background (available RAM)
+    this.ramBarAvailable = this.add.rectangle(x, y, barWidth, barHeight, 0x002B44);
     this.ramBarAvailable.setOrigin(0, 0.5);
-    this.ramBarAvailable.setDepth(1); // Above computer
+    this.ramBarAvailable.setDepth(1);
     
-    // Create the red overlay (used RAM)
-    this.ramBarUsed = this.add.rectangle(x, y, 0, barHeight, 0xff0000);
+    // Create the blue overlay (used RAM)
+    this.ramBarUsed = this.add.rectangle(x, y, 0, barHeight, 0x0066CC);
     this.ramBarUsed.setOrigin(0, 0.5);
-    this.ramBarUsed.setDepth(1); // Above computer
+    this.ramBarUsed.setDepth(1);
 
     // Add RAM text
     this.ramText = this.add.text(
@@ -47,12 +47,12 @@ class MainScene extends Phaser.Scene {
       '4/4GB',
       {
         font: 'bold 14px monospace',
-        fill: '#ffffff',
+        fill: '#FFFFFF',
         align: 'center'
       }
     );
     this.ramText.setOrigin(0.5);
-    this.ramText.setDepth(2); // Above RAM bar
+    this.ramText.setDepth(2);
   }
 
   updateRamBar() {
@@ -65,7 +65,7 @@ class MainScene extends Phaser.Scene {
     const barWidth = 140;  // Match the width from createRamBar
     const usedWidth = Math.max(0, barWidth * (usedByFirewalls/totalRAM));
 
-    // Update the red bar (used RAM)
+    // Update the blue bar (used RAM)
     this.ramBarUsed.width = usedWidth;
 
     // Update the text
@@ -144,18 +144,18 @@ class MainScene extends Phaser.Scene {
 
     // If this is a firewall, create new radius
     if (module.type === 'firewall') {
-      const radius = this.add.circle(module.x, module.y, 180, 0xFFFF00, 0.15);
-      radius.setStrokeStyle(1, 0xFFFF00, 0.4);
-      radius.setDepth(-2); // Below everything including beams
+      const radius = this.add.circle(module.x, module.y, 180, 0x0099FF, 0.15);
+      radius.setStrokeStyle(1, 0x0099FF, 0.4);
+      radius.setDepth(-2);
       module.detectionRadius = radius;
-      module.isActive = true; // Start as active
+      module.isActive = true;
     }
   }
 
   createFireBeam(startX, startY, targetX, targetY) {
     // Create a simple line graphics object
     const line = this.add.graphics();
-    line.setDepth(-1); // Below everything
+    line.setDepth(-1);
     
     // Create a tween to pulse the line width
     const pulseWidth = {value: 4};
@@ -168,7 +168,7 @@ class MainScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
       onUpdate: () => {
         line.clear();
-        line.lineStyle(pulseWidth.value, 0xff6600, 1);
+        line.lineStyle(pulseWidth.value, 0x0099FF, 1);
         line.beginPath();
         line.moveTo(startX, startY);
         line.lineTo(targetX, targetY);
@@ -192,7 +192,7 @@ class MainScene extends Phaser.Scene {
       frequency: 30,
       scale: { start: 0.5, end: 0 },
       alpha: { start: 1, end: 0 },
-      tint: [0xff0000, 0xff6600, 0xffff00],
+      tint: [0x0099FF, 0x0066CC, 0x00CCFF],
       speed: { min: 50, max: 80 },
       angle: { min: 0, max: 360 },
       gravityY: -50,
@@ -210,7 +210,7 @@ class MainScene extends Phaser.Scene {
         frequency: 40,
         scale: { start: 0.3, end: 0 },
         alpha: { start: 0.8, end: 0 },
-        tint: [0xff0000, 0xff6600],
+        tint: [0x0099FF, 0x0066CC],
         speed: { min: 60, max: 100 },
         angle: { min: angle - 10, max: angle + 10 },
         gravityY: -80,
@@ -226,7 +226,7 @@ class MainScene extends Phaser.Scene {
       frequency: 20,
       scale: { start: 0.1, end: 0 },
       alpha: { start: 1, end: 0 },
-      tint: 0xffff00,
+      tint: 0x00CCFF,
       speed: { min: 100, max: 200 },
       angle: { min: 0, max: 360 },
       gravityY: -20,
@@ -247,7 +247,7 @@ class MainScene extends Phaser.Scene {
       sparks.destroy();
     });
 
-    return 1000; // Animation duration
+    return 1000;
   }
 
   checkVirusCollisions() {
@@ -354,7 +354,6 @@ class MainScene extends Phaser.Scene {
       
       // If removing a firewall, clean up its effects
       if (module.type === 'firewall') {
-        // Cancel any pending reactivation timer
         if (module.reactivationTimer) {
           module.reactivationTimer.remove();
           module.reactivationTimer = null;
@@ -371,10 +370,10 @@ class MainScene extends Phaser.Scene {
 
       // Update module properties
       if (type) {
-        module.fillColor = 0x00ff00;
+        module.fillColor = 0x0066CC;
         module.occupied = true;
         module.type = type;
-        module.setDepth(0); // Same level as computer
+        module.setDepth(0);
         
         if (!module.typeText) {
           let displayText = type.toUpperCase();
@@ -389,12 +388,12 @@ class MainScene extends Phaser.Scene {
             displayText,
             {
               font: type === 'firewall' ? '12px/14px monospace' : '12px monospace',
-              fill: '#000000',
+              fill: '#FFFFFF',
               align: 'center'
             }
           );
           module.typeText.setOrigin(0.5);
-          module.typeText.setDepth(1); // Above modules
+          module.typeText.setDepth(1);
         } else {
           let displayText = type.toUpperCase();
           if (type === 'ram') {
@@ -405,10 +404,10 @@ class MainScene extends Phaser.Scene {
           module.typeText.setText(displayText);
         }
       } else {
-        module.fillColor = 0x000000;
+        module.fillColor = 0x001B34;
         module.occupied = false;
         module.type = null;
-        module.setDepth(0); // Same level as computer
+        module.setDepth(0);
         if (module.typeText) {
           module.typeText.destroy();
           module.typeText = null;
@@ -464,49 +463,146 @@ class MainScene extends Phaser.Scene {
     particleTexture.generateTexture('particle', 8, 8);
     particleTexture.destroy();
 
+    // Create the main computer background (darker shade)
+    this.mainComputerBg = this.add.rectangle(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      200,
+      200,
+      0x002244
+    );
+    this.mainComputerBg.setDepth(0);
+
     // Create the main computer (central target)
     this.mainComputer = this.add.rectangle(
       this.cameras.main.centerX,
       this.cameras.main.centerY,
       200,
       200,
-      0x00ff00
+      0x003366
     );
     this.mainComputer.setInteractive();
-    this.mainComputer.setDepth(0); // Base layer for computer
+    this.mainComputer.setDepth(0);
+    this.mainComputer.setAlpha(0.9); // Make it slightly transparent
+
+    // Add server/CPU visual elements
+    const graphics = this.add.graphics();
+    graphics.lineStyle(1, 0x0099FF, 0.2); // Thinner, more transparent lines for grid
+
+    // Add grid pattern
+    for (let i = -80; i <= 80; i += 40) {
+      graphics.beginPath();
+      graphics.moveTo(this.mainComputer.x - 100, this.mainComputer.y + i);
+      graphics.lineTo(this.mainComputer.x + 100, this.mainComputer.y + i);
+      graphics.strokePath();
+
+      graphics.beginPath();
+      graphics.moveTo(this.mainComputer.x + i, this.mainComputer.y - 100);
+      graphics.lineTo(this.mainComputer.x + i, this.mainComputer.y + 100);
+      graphics.strokePath();
+    }
+
+    // Add circuit-like patterns
+    graphics.lineStyle(2, 0x0066CC, 0.3); // Darker, more transparent circuit lines
+    
+    // Horizontal lines
+    graphics.beginPath();
+    graphics.moveTo(this.mainComputer.x - 90, this.mainComputer.y - 60);
+    graphics.lineTo(this.mainComputer.x + 90, this.mainComputer.y - 60);
+    graphics.strokePath();
+
+    graphics.beginPath();
+    graphics.moveTo(this.mainComputer.x - 90, this.mainComputer.y + 60);
+    graphics.lineTo(this.mainComputer.x + 90, this.mainComputer.y + 60);
+    graphics.strokePath();
+
+    // Vertical lines
+    graphics.beginPath();
+    graphics.moveTo(this.mainComputer.x - 60, this.mainComputer.y - 90);
+    graphics.lineTo(this.mainComputer.x - 60, this.mainComputer.y + 90);
+    graphics.strokePath();
+
+    graphics.beginPath();
+    graphics.moveTo(this.mainComputer.x + 60, this.mainComputer.y - 90);
+    graphics.lineTo(this.mainComputer.x + 60, this.mainComputer.y + 90);
+    graphics.strokePath();
+
+    // Add corner accents
+    const cornerSize = 20;
+    const corners = [
+      { x: -100, y: -100 }, // Top-left
+      { x: 100, y: -100 },  // Top-right
+      { x: 100, y: 100 },   // Bottom-right
+      { x: -100, y: 100 }   // Bottom-left
+    ];
+
+    graphics.lineStyle(2, 0x0066CC, 0.4); // Slightly more visible corner accents
+    corners.forEach(corner => {
+      // Horizontal line
+      graphics.beginPath();
+      graphics.moveTo(this.mainComputer.x + corner.x, this.mainComputer.y + corner.y);
+      graphics.lineTo(this.mainComputer.x + corner.x + (corner.x < 0 ? cornerSize : -cornerSize), this.mainComputer.y + corner.y);
+      graphics.strokePath();
+
+      // Vertical line
+      graphics.beginPath();
+      graphics.moveTo(this.mainComputer.x + corner.x, this.mainComputer.y + corner.y);
+      graphics.lineTo(this.mainComputer.x + corner.x, this.mainComputer.y + corner.y + (corner.y < 0 ? cornerSize : -cornerSize));
+      graphics.strokePath();
+    });
+
+    graphics.setDepth(1);
 
     // Create the RAM bar
     this.createRamBar();
 
-    // Add production rate in the middle
+    // Add production rate in the middle with more transparent background
+    const textBg = this.add.rectangle(
+      this.mainComputer.x,
+      this.mainComputer.y,
+      140,
+      30,
+      0x003366,
+      0.6
+    );
+    textBg.setDepth(1);
+
     this.productionRateText = this.add.text(
       this.mainComputer.x,
       this.mainComputer.y,
       '2 units/sec',
       {
         font: '18px monospace',
-        fill: '#000000',
-        backgroundColor: '#00ff00',
+        fill: '#FFFFFF',
         padding: { x: 10, y: 5 }
       }
     );
     this.productionRateText.setOrigin(0.5);
-    this.productionRateText.setDepth(1); // Above computer
+    this.productionRateText.setDepth(2);
 
-    // Add production type text with icon at the bottom
+    // Add production type text with icon at the bottom with more transparent background
+    const productionBg = this.add.rectangle(
+      this.mainComputer.x,
+      this.mainComputer.y + 30,
+      140,
+      30,
+      0x003366,
+      0.6
+    );
+    productionBg.setDepth(1);
+
     this.productionText = this.add.text(
       this.mainComputer.x,
       this.mainComputer.y + 30,
       '📜 Scripts',
       {
         font: '20px monospace',
-        fill: '#000000',
-        backgroundColor: '#00ff00',
+        fill: '#FFFFFF',
         padding: { x: 10, y: 5 }
       }
     );
     this.productionText.setOrigin(0.5);
-    this.productionText.setDepth(1); // Above computer
+    this.productionText.setDepth(2);
     this.productionText.setInteractive();
 
     // Handle clicks on production text or computer
@@ -536,8 +632,8 @@ class MainScene extends Phaser.Scene {
 
     // Create modules
     this.modules = modulePositions.map((pos, index) => {
-      const module = this.add.rectangle(pos.x, pos.y, 40, 40, 0x000000);
-      module.setStrokeStyle(1, 0x00ff00);
+      const module = this.add.rectangle(pos.x, pos.y, 40, 40, 0x001B34);
+      module.setStrokeStyle(1, 0x0099FF);
       module.setInteractive();
       module.index = index;
       module.occupied = false;
@@ -545,13 +641,13 @@ class MainScene extends Phaser.Scene {
       
       module.on('pointerover', () => {
         if (!module.occupied) {
-          module.fillColor = 0x003300;
+          module.fillColor = 0x002B44;
         }
       });
       
       module.on('pointerout', () => {
         if (!module.occupied) {
-          module.fillColor = 0x000000;
+          module.fillColor = 0x001B34;
         }
       });
       
@@ -829,8 +925,10 @@ const GameCanvas = () => {
         style={{ 
           width: '800px', 
           height: '600px',
-          border: '2px solid #00ff00',
-          boxShadow: '0 0 10px #00ff00'
+          border: '1px solid #0066CC',
+          borderRadius: '8px',
+          boxShadow: '0 4px 20px rgba(0, 102, 204, 0.4)',
+          overflow: 'hidden'
         }}
       />
       {selectedModule !== null && (
