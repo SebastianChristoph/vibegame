@@ -1,6 +1,5 @@
 import React from 'react';
 import { useGameStore } from '../stores/gameStore';
-import './BuildingSelection.css';
 
 const BuildingSelection = ({ moduleId, onClose }) => {
   const { crypto, buildingCosts, buildOnModule } = useGameStore();
@@ -39,7 +38,8 @@ const BuildingSelection = ({ moduleId, onClose }) => {
     marginBottom: '10px',
     textTransform: 'uppercase',
     letterSpacing: '1px',
-    fontWeight: 500
+    fontWeight: 500,
+    textShadow: '0 0 10px #00CCFF'
   };
 
   const ramStyle = {
@@ -51,24 +51,31 @@ const BuildingSelection = ({ moduleId, onClose }) => {
     textShadow: '0 0 10px #00CCFF'
   };
 
-  const buttonStyle = {
+  const baseButtonStyle = {
     width: '100%',
     padding: '0.75rem',
     marginBottom: '8px',
-    backgroundColor: 'rgba(0, 102, 204, 0.4)',
     border: '1px solid #0099FF',
     borderRadius: '4px',
-    color: '#FFFFFF',
-    cursor: 'pointer',
     fontFamily: 'Share Tech Mono, monospace',
     fontSize: '0.9rem',
     textTransform: 'uppercase',
     letterSpacing: '1px',
-    transition: 'all 0.2s ease'
+    transition: 'all 0.2s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+  };
+
+  const activeButtonStyle = {
+    ...baseButtonStyle,
+    backgroundColor: 'rgba(0, 102, 204, 0.4)',
+    color: '#FFFFFF',
   };
 
   const disabledButtonStyle = {
-    ...buttonStyle,
+    ...baseButtonStyle,
     backgroundColor: 'rgba(0, 27, 52, 0.6)',
     color: '#0099FF',
     cursor: 'not-allowed',
@@ -76,41 +83,63 @@ const BuildingSelection = ({ moduleId, onClose }) => {
   };
 
   const cancelButtonStyle = {
-    width: '100%',
-    padding: '0.75rem',
+    ...baseButtonStyle,
     backgroundColor: 'rgba(0, 27, 52, 0.6)',
-    border: '1px solid #0099FF',
-    borderRadius: '4px',
     color: '#0099FF',
-    cursor: 'pointer',
-    fontFamily: 'Share Tech Mono, monospace',
-    fontSize: '0.9rem',
-    textTransform: 'uppercase',
-    letterSpacing: '1px',
-    transition: 'all 0.2s ease'
+    marginBottom: 0,
+    ':hover': {
+      backgroundColor: 'rgba(0, 153, 255, 0.2)',
+      transform: 'translateY(-1px)',
+      boxShadow: '0 0 15px rgba(0, 153, 255, 0.3)'
+    }
   };
+
+  const iconStyle = {
+    fontSize: '1.2rem',
+    textShadow: '0 0 5px #00CCFF',
+    marginRight: '8px'
+  };
+
+  // Add hover styles using CSS
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `
+    .building-button:not(:disabled):hover {
+      background-color: rgba(0, 153, 255, 0.5) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 0 15px rgba(0, 153, 255, 0.3);
+    }
+    .cancel-button:hover {
+      background-color: rgba(0, 153, 255, 0.2) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 0 15px rgba(0, 153, 255, 0.3);
+    }
+  `;
+  document.head.appendChild(styleSheet);
 
   return (
     <div style={menuStyle} onClick={handleContainerClick}>
       <div style={titleStyle}>Build on Module</div>
       <div style={ramStyle}>Available RAM: 4GB</div>
       <button
-        style={crypto >= buildingCosts.ram ? buttonStyle : disabledButtonStyle}
+        className="building-button"
+        style={crypto >= buildingCosts.ram ? activeButtonStyle : disabledButtonStyle}
         onClick={() => handleBuild('ram')}
         disabled={crypto < buildingCosts.ram}
       >
-        <span style={{ fontSize: '1.2rem', textShadow: '0 0 5px #00CCFF', marginRight: '8px' }}>⚡</span>
+        <span style={iconStyle}>⚡</span>
         RAM (+2GB) - 50 Crypto
       </button>
       <button
-        style={crypto >= buildingCosts.firewall ? buttonStyle : disabledButtonStyle}
+        className="building-button"
+        style={crypto >= buildingCosts.firewall ? activeButtonStyle : disabledButtonStyle}
         onClick={() => handleBuild('firewall')}
         disabled={crypto < buildingCosts.firewall}
       >
-        <span style={{ fontSize: '1.2rem', textShadow: '0 0 5px #00CCFF', marginRight: '8px' }}>🛡️</span>
+        <span style={iconStyle}>🛡️</span>
         Firewall (-2GB RAM) - 75 Crypto
       </button>
       <button
+        className="cancel-button"
         style={cancelButtonStyle}
         onClick={(e) => {
           e.stopPropagation();

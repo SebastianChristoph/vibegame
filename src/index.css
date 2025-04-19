@@ -55,16 +55,17 @@ button {
 
 @keyframes glow {
   0% {
-    text-shadow: 0 0 5px #00ff00;
+    text-shadow: 0 0 5px #0099FF;
   }
   50% {
-    text-shadow: 0 0 20px #00ff00;
+    text-shadow: 0 0 20px #00CCFF;
   }
   100% {
-    text-shadow: 0 0 5px #00ff00;
+    text-shadow: 0 0 5px #0099FF;
   }
 }
 
 .glow-text {
   animation: glow 2s infinite;
+  color: #0099FF;
 }

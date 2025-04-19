@@ -153,32 +153,74 @@ class MainScene extends Phaser.Scene {
   }
 
   createFireBeam(startX, startY, targetX, targetY) {
-    // Create a simple line graphics object
-    const line = this.add.graphics();
-    line.setDepth(-1);
+    // Create a container for multiple fire lines
+    const lines = [];
+    const numLines = 3; // Number of parallel fire lines
+    const spread = 6; // How far the lines spread from center
     
-    // Create a tween to pulse the line width
-    const pulseWidth = {value: 4};
+    for (let i = 0; i < numLines; i++) {
+      const line = this.add.graphics();
+      line.setDepth(10); // Set high depth to appear above other elements
+      lines.push(line);
+    }
+    
+    // Create a tween to animate the fire effect
+    const pulseWidth = {value: 3};
     this.tweens.add({
       targets: pulseWidth,
-      value: 6,
+      value: 8,
       duration: 200,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
       onUpdate: () => {
-        line.clear();
-        line.lineStyle(pulseWidth.value, 0x0099FF, 1);
-        line.beginPath();
-        line.moveTo(startX, startY);
-        line.lineTo(targetX, targetY);
-        line.strokePath();
+        lines.forEach((line, index) => {
+          line.clear();
+          
+          // Calculate offset for this line
+          const offset = (index - (numLines - 1) / 2) * spread;
+          
+          // Calculate perpendicular vector for offset
+          const dx = targetX - startX;
+          const dy = targetY - startY;
+          const len = Math.sqrt(dx * dx + dy * dy);
+          const perpX = -dy / len;
+          const perpY = dx / len;
+          
+          // Calculate offset points
+          const startOffsetX = startX + perpX * offset;
+          const startOffsetY = startY + perpY * offset;
+          const targetOffsetX = targetX + perpX * offset;
+          const targetOffsetY = targetY + perpY * offset;
+          
+          // Use different colors for each line
+          const colors = [0x0099FF, 0x00CCFF, 0x66FFFF];
+          const alpha = 0.7 - Math.abs(index - 1) * 0.2; // Center line is brightest
+          
+          line.lineStyle(pulseWidth.value * (1 - Math.abs(index - 1) * 0.3), colors[index], alpha);
+          line.beginPath();
+          line.moveTo(startOffsetX, startOffsetY);
+          
+          // Add some waviness to the line
+          const segments = 5;
+          for (let j = 1; j <= segments; j++) {
+            const t = j / segments;
+            const waveAmplitude = Math.sin(t * Math.PI) * 4;
+            const waveX = startOffsetX + (targetOffsetX - startOffsetX) * t + 
+                         perpX * Math.sin(t * Math.PI * 4 + this.time.now * 0.01) * waveAmplitude;
+            const waveY = startOffsetY + (targetOffsetY - startOffsetY) * t + 
+                         perpY * Math.sin(t * Math.PI * 4 + this.time.now * 0.01) * waveAmplitude;
+            line.lineTo(waveX, waveY);
+          }
+          
+          line.strokePath();
+        });
       }
     });
 
-    // Remove the line after 2.5 seconds
+    // Remove the lines after 2.5 seconds
     this.time.delayedCall(2500, () => {
-      line.destroy();
+      lines.forEach(line => line.destroy());
     });
 
     return 2500;
@@ -748,16 +790,16 @@ const BuildingSelection = ({ moduleId, onClose, onBuild }) => {
         top: '20px',
         right: '20px',
         backgroundColor: '#000000',
-        border: '2px solid #00ff00',
+        border: '2px solid #0099FF',
         padding: '1rem',
         zIndex: 1000,
         minWidth: '200px'
       }}
     >
-      <h3 style={{ color: '#00ff00', margin: '0 0 1rem 0', textAlign: 'center' }}>
+      <h3 style={{ color: '#0099FF', margin: '0 0 1rem 0', textAlign: 'center' }}>
         {currentModule.type ? 'Modify Module' : 'Build on Module'}
       </h3>
-      <div style={{ color: '#00ff00', marginBottom: '1rem', textAlign: 'center', fontFamily: 'monospace' }}>
+      <div style={{ color: '#0099FF', marginBottom: '1rem', textAlign: 'center', fontFamily: 'monospace' }}>
         Available RAM: {currentRAM}GB
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -765,8 +807,8 @@ const BuildingSelection = ({ moduleId, onClose, onBuild }) => {
           onClick={() => handleBuild('ram')}
           disabled={getButtonDisabled('ram')}
           style={{
-            backgroundColor: !getButtonDisabled('ram') ? '#00ff00' : '#333333',
-            color: '#000000',
+            backgroundColor: !getButtonDisabled('ram') ? 'rgba(0, 102, 204, 0.4)' : '#333333',
+            color: '#0099FF',
             border: 'none',
             padding: '0.5rem',
             cursor: !getButtonDisabled('ram') ? 'pointer' : 'not-allowed',
@@ -779,8 +821,8 @@ const BuildingSelection = ({ moduleId, onClose, onBuild }) => {
           onClick={() => handleBuild('firewall')}
           disabled={getButtonDisabled('firewall')}
           style={{
-            backgroundColor: !getButtonDisabled('firewall') ? '#00ff00' : '#333333',
-            color: '#000000',
+            backgroundColor: !getButtonDisabled('firewall') ? 'rgba(0, 102, 204, 0.4)' : '#333333',
+            color: '#0099FF',
             border: 'none',
             padding: '0.5rem',
             cursor: !getButtonDisabled('firewall') ? 'pointer' : 'not-allowed',
@@ -808,8 +850,8 @@ const BuildingSelection = ({ moduleId, onClose, onBuild }) => {
           onClick={onClose}
           style={{
             backgroundColor: '#333333',
-            color: '#00ff00',
-            border: '1px solid #00ff00',
+            color: '#0099FF',
+            border: '1px solid #0099FF',
             padding: '0.5rem',
             cursor: 'pointer',
             fontFamily: 'monospace'
