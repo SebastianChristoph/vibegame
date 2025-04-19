@@ -18,6 +18,9 @@ class MainScene extends Phaser.Scene {
     this.virusSpawnRate = 1500;
     this.activeFirewalls = new Set(); // Keep track of active firewalls
     this.computerSize = 150; // Reduced from 200 (25% smaller)
+    this.nodes = [];  // Array to store all nodes
+    this.nodeConnections = []; // Array to store node connections
+    this.connectorPoints = []; // Array to store connector points
   }
 
   createRamBar() {
@@ -381,7 +384,7 @@ class MainScene extends Phaser.Scene {
             const virusIndex = i;
             const virusRef = virus;
             
-            // 3. Shoot fire beam and destroy virus
+            // 3. Shoot fire beam and destroy virus after beam
             const beamDuration = this.createFireBeam(
               module.x, 
               module.y, 
@@ -528,6 +531,162 @@ class MainScene extends Phaser.Scene {
 
     // Check for collisions
     this.checkVirusCollisions();
+  }
+
+  createNode(x, y) {
+    const node = this.add.circle(x, y, 15, 0x001B34);
+    node.setStrokeStyle(2, 0x0099FF);
+    node.setInteractive();
+    node.unlocked = false;
+    
+    // Add subtle glow effect
+    const glow = this.add.circle(x, y, 20, 0x0099FF, 0.1);
+    glow.setDepth(-1);
+    node.glow = glow;
+
+    node.on('pointerover', () => {
+      if (!node.unlocked) {
+        node.setStrokeStyle(2, 0x00FFFF);
+        node.glow.setAlpha(0.2);
+      }
+    });
+
+    node.on('pointerout', () => {
+      if (!node.unlocked) {
+        node.setStrokeStyle(2, 0x0099FF);
+        node.glow.setAlpha(0.1);
+      }
+    });
+
+    node.on('pointerdown', () => {
+      if (!node.unlocked) {
+        this.game.events.emit('nodeClicked', { node, x, y });
+      }
+    });
+
+    return node;
+  }
+
+  createConnectorPoints() {
+    const connectorPositions = [
+      // Top side (between modules)
+      { x: this.mainComputer.x, y: this.mainComputer.y - this.computerSize*0.7 },
+      // Right side (between modules)
+      { x: this.mainComputer.x + this.computerSize*0.7, y: this.mainComputer.y },
+      // Bottom side (between modules)
+      { x: this.mainComputer.x, y: this.mainComputer.y + this.computerSize*0.7 },
+      // Left side (between modules)
+      { x: this.mainComputer.x - this.computerSize*0.7, y: this.mainComputer.y }
+    ];
+
+    this.connectorPoints = connectorPositions.map(pos => {
+      const point = this.add.circle(pos.x, pos.y, 3, 0x0099FF, 0.5);
+      point.setDepth(1);
+      return point;
+    });
+  }
+
+  findNearestConnector(nodeX, nodeY) {
+    let nearestConnector = null;
+    let shortestDistance = Infinity;
+
+    for (const connector of this.connectorPoints) {
+      const distance = Phaser.Math.Distance.Between(nodeX, nodeY, connector.x, connector.y);
+      if (distance < shortestDistance) {
+        shortestDistance = distance;
+        nearestConnector = connector;
+      }
+    }
+
+    return nearestConnector;
+  }
+
+  unlockNode(node) {
+    node.unlocked = true;
+    node.setFillStyle(0x0066CC);
+    node.glow.setAlpha(0.3);
+    
+    // Find the nearest connector point
+    const nearestConnector = this.findNearestConnector(node.x, node.y);
+    
+    // Create circuit-like connection
+    const graphics = this.add.graphics();
+    graphics.lineStyle(2, 0x0099FF, 0.8);
+    
+    // Determine if we're connecting to a vertical or horizontal connector
+    const isVerticalConnector = nearestConnector.x === this.mainComputer.x;
+    
+    // Calculate the turn point - this is where the line will change direction
+    let turnX, turnY;
+    
+    if (isVerticalConnector) {
+      // For vertical connectors (top/bottom), we need to align with connector's X
+      turnX = nearestConnector.x;
+      // The turn should happen at the node's Y level
+      turnY = node.y;
+    } else {
+      // For horizontal connectors (left/right), we need to align with connector's Y
+      turnX = node.x;
+      // The turn should happen at the connector's Y level
+      turnY = nearestConnector.y;
+    }
+    
+    // Calculate safe distance for the turn
+    const safeDistance = this.computerSize * 0.8; // Distance from computer center where the turn should happen
+    const distanceToComputer = Phaser.Math.Distance.Between(turnX, turnY, this.mainComputer.x, this.mainComputer.y);
+    
+    // If turn point is too close to computer, push it out
+    if (distanceToComputer < safeDistance) {
+      if (isVerticalConnector) {
+        // Adjust X position of turn while keeping Y
+        turnX = this.mainComputer.x + (turnX < this.mainComputer.x ? -safeDistance : safeDistance);
+      } else {
+        // Adjust Y position of turn while keeping X
+        turnY = this.mainComputer.y + (turnY < this.mainComputer.y ? -safeDistance : safeDistance);
+      }
+    }
+    
+    // Draw the connection path
+    graphics.beginPath();
+    graphics.moveTo(node.x, node.y);
+    
+    if (isVerticalConnector) {
+      // For vertical connectors: go to turn point, then to connector
+      graphics.lineTo(turnX, node.y);
+      graphics.lineTo(turnX, nearestConnector.y);
+    } else {
+      // For horizontal connectors: go to turn point, then to connector
+      graphics.lineTo(node.x, turnY);
+      graphics.lineTo(nearestConnector.x, turnY);
+    }
+    
+    graphics.lineTo(nearestConnector.x, nearestConnector.y);
+    graphics.strokePath();
+    
+    // Add subtle glow effect
+    const glowGraphics = this.add.graphics();
+    glowGraphics.lineStyle(4, 0x0099FF, 0.2);
+    glowGraphics.beginPath();
+    glowGraphics.moveTo(node.x, node.y);
+    
+    if (isVerticalConnector) {
+      glowGraphics.lineTo(turnX, node.y);
+      glowGraphics.lineTo(turnX, nearestConnector.y);
+    } else {
+      glowGraphics.lineTo(node.x, turnY);
+      glowGraphics.lineTo(nearestConnector.x, turnY);
+    }
+    
+    glowGraphics.lineTo(nearestConnector.x, nearestConnector.y);
+    glowGraphics.strokePath();
+    
+    // Store the connection graphics with the node
+    node.connection = {
+      line: graphics,
+      glow: glowGraphics
+    };
+    
+    this.nodeConnections.push(node.connection);
   }
 
   create() {
@@ -714,6 +873,52 @@ class MainScene extends Phaser.Scene {
 
     // Start virus spawning
     this.nextVirusSpawn = this.time.now + this.virusSpawnRate;
+
+    // After creating the main computer, add random nodes
+    const margin = 100; // Minimum distance from edges
+    const minDistanceFromComputer = 200; // Minimum distance from main computer
+    const minDistanceBetweenNodes = 100; // Minimum distance between nodes
+    const numberOfNodes = 8; // Number of nodes to create
+    
+    for (let i = 0; i < numberOfNodes; i++) {
+      let validPosition = false;
+      let x, y;
+      
+      // Keep trying until we find a valid position
+      while (!validPosition) {
+        x = Phaser.Math.Between(margin, this.cameras.main.width - margin);
+        y = Phaser.Math.Between(margin, this.cameras.main.height - margin);
+        
+        // Check distance from computer
+        const distanceFromComputer = Phaser.Math.Distance.Between(
+          x, y,
+          this.mainComputer.x, this.mainComputer.y
+        );
+        
+        // Check distance from other nodes
+        let tooCloseToOtherNodes = false;
+        for (const node of this.nodes) {
+          const distanceFromNode = Phaser.Math.Distance.Between(
+            x, y,
+            node.x, node.y
+          );
+          if (distanceFromNode < minDistanceBetweenNodes) {
+            tooCloseToOtherNodes = true;
+            break;
+          }
+        }
+        
+        if (distanceFromComputer >= minDistanceFromComputer && !tooCloseToOtherNodes) {
+          validPosition = true;
+        }
+      }
+      
+      const node = this.createNode(x, y);
+      this.nodes.push(node);
+    }
+
+    // Add connector points after creating the main computer
+    this.createConnectorPoints();
   }
 
   pulseMainComputer() {
@@ -740,6 +945,67 @@ class MainScene extends Phaser.Scene {
     });
   }
 }
+
+const NodeUnlockDialog = ({ onClose, onUnlock, nodePosition }) => {
+  return (
+    <div 
+      style={{
+        position: 'absolute',
+        top: nodePosition.y - 60, // Position above the node
+        left: nodePosition.x - 100, // Center horizontally relative to node
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        border: '1px solid #0099FF',
+        padding: '0.5rem',
+        zIndex: 1000,
+        width: '200px',
+        textAlign: 'center',
+        borderRadius: '4px',
+        boxShadow: '0 0 10px rgba(0, 153, 255, 0.3)'
+      }}
+    >
+      <p style={{ 
+        color: '#FFFFFF', 
+        margin: '0 0 0.5rem 0', 
+        fontSize: '0.9rem',
+        fontFamily: 'monospace' 
+      }}>
+        Unlock for 200 Scripts?
+      </p>
+      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+        <button
+          onClick={onUnlock}
+          style={{
+            backgroundColor: 'rgba(0, 102, 204, 0.4)',
+            color: '#0099FF',
+            border: '1px solid #0099FF',
+            padding: '0.25rem 0.75rem',
+            cursor: 'pointer',
+            fontFamily: 'monospace',
+            fontSize: '0.8rem',
+            borderRadius: '2px'
+          }}
+        >
+          Unlock
+        </button>
+        <button
+          onClick={onClose}
+          style={{
+            backgroundColor: 'transparent',
+            color: '#666666',
+            border: '1px solid #666666',
+            padding: '0.25rem 0.75rem',
+            cursor: 'pointer',
+            fontFamily: 'monospace',
+            fontSize: '0.8rem',
+            borderRadius: '2px'
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const BuildingSelection = ({ moduleId, onClose, onBuild }) => {
   const { 
@@ -880,6 +1146,8 @@ const GameCanvas = () => {
   const gameRef = useRef(null);
   const [selectedModule, setSelectedModule] = useState(null);
   const [showProductionMenu, setShowProductionMenu] = useState(false);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [nodePosition, setNodePosition] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
   const gameStarted = useGameStore((state) => state.gameStarted);
   const mainComputer = useGameStore((state) => state.mainComputer);
@@ -888,6 +1156,8 @@ const GameCanvas = () => {
   const productionMode = useGameStore((state) => state.productionMode);
   const getAvailableRAM = useGameStore((state) => state.getAvailableRAM);
   const getTotalRAM = useGameStore((state) => state.getTotalRAM);
+  const scripts = useGameStore((state) => state.scripts);
+  const updateScripts = useGameStore((state) => state.updateScripts);
 
   // Handle window resize
   useEffect(() => {
@@ -964,6 +1234,11 @@ const GameCanvas = () => {
       game.events.on('toggleProductionMenu', () => {
         setShowProductionMenu(prev => !prev);
       });
+
+      game.events.on('nodeClicked', ({ node, x, y }) => {
+        setSelectedNode(node);
+        setNodePosition({ x, y });
+      });
     }
 
     return () => {
@@ -994,6 +1269,19 @@ const GameCanvas = () => {
     }
   };
 
+  const handleNodeUnlock = () => {
+    console.log('Attempting to unlock node. Scripts:', scripts); // Debug log
+    if (scripts >= 200 && selectedNode) {
+      console.log('Unlocking node...'); // Debug log
+      updateScripts(-200);
+      if (gameRef.current && gameRef.current.scene.scenes[0]) {
+        const scene = gameRef.current.scene.scenes[0];
+        scene.unlockNode(selectedNode);
+      }
+      setSelectedNode(null);
+    }
+  };
+
   return (
     <div style={{ position: 'relative', width: '100vw', height: 'calc(100vh - 40px)' }}>
       <div 
@@ -1016,6 +1304,23 @@ const GameCanvas = () => {
           onClose={() => setShowProductionMenu(false)} 
         />
       )}
+      {selectedNode && (
+        <NodeUnlockDialog
+          onClose={() => setSelectedNode(null)}
+          onUnlock={handleNodeUnlock}
+          nodePosition={nodePosition}
+        />
+      )}
+      {/* Debug display */}
+      <div style={{
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        color: '#0099FF',
+        fontFamily: 'monospace'
+      }}>
+        Scripts: {scripts}
+      </div>
     </div>
   );
 };

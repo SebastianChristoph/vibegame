@@ -4,7 +4,7 @@ const useGameStore = create((set, get) => ({
   // Resources
   crypto: 2000,
   research: 0,
-  scripts: 0,
+  scripts: 1000, // Start with some scripts
   
   // Game state
   gameStarted: false,
@@ -97,6 +97,7 @@ const useGameStore = create((set, get) => ({
   addCrypto: (amount) => set((state) => ({ crypto: state.crypto + amount })),
   addResearch: (amount) => set((state) => ({ research: state.research + amount })),
   addScripts: (amount) => set((state) => ({ scripts: state.scripts + amount })),
+  updateScripts: (amount) => set((state) => ({ scripts: state.scripts + amount })),
   
   // Check if we have enough RAM for a building
   hasEnoughRAM: (buildingType) => {
