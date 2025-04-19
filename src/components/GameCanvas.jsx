@@ -17,17 +17,18 @@ class MainScene extends Phaser.Scene {
     this.nextVirusSpawn = 0;
     this.virusSpawnRate = 1500;
     this.activeFirewalls = new Set(); // Keep track of active firewalls
+    this.computerSize = 150; // Reduced from 200 (25% smaller)
   }
 
   createRamBar() {
-    const barWidth = 140;
-    const barHeight = 25;
+    const barWidth = this.computerSize * 0.8;
+    const barHeight = 16;
     const x = this.mainComputer.x - barWidth/2;
-    const y = this.mainComputer.y - 60;
+    const y = this.mainComputer.y - this.computerSize/4;
 
     // Create container rectangle with border
     this.ramBarContainer = this.add.rectangle(x + barWidth/2, y, barWidth, barHeight, 0x001B34);
-    this.ramBarContainer.setStrokeStyle(2, 0x0099FF);
+    this.ramBarContainer.setStrokeStyle(1, 0x0099FF);
     this.ramBarContainer.setDepth(1);
 
     // Create the dark blue background (available RAM)
@@ -46,7 +47,7 @@ class MainScene extends Phaser.Scene {
       y,
       '4/4GB',
       {
-        font: 'bold 14px monospace',
+        font: 'bold 12px monospace',
         fill: '#FFFFFF',
         align: 'center'
       }
@@ -144,7 +145,7 @@ class MainScene extends Phaser.Scene {
 
     // If this is a firewall, create new radius
     if (module.type === 'firewall') {
-      const radius = this.add.circle(module.x, module.y, 180, 0x0099FF, 0.15);
+      const radius = this.add.circle(module.x, module.y, this.computerSize * 0.9, 0x0099FF, 0.15);
       radius.setStrokeStyle(1, 0x0099FF, 0.4);
       radius.setDepth(-2);
       module.detectionRadius = radius;
@@ -509,8 +510,8 @@ class MainScene extends Phaser.Scene {
     this.mainComputerBg = this.add.rectangle(
       this.cameras.main.centerX,
       this.cameras.main.centerY,
-      200,
-      200,
+      this.computerSize,
+      this.computerSize,
       0x002244
     );
     this.mainComputerBg.setDepth(0);
@@ -519,74 +520,73 @@ class MainScene extends Phaser.Scene {
     this.mainComputer = this.add.rectangle(
       this.cameras.main.centerX,
       this.cameras.main.centerY,
-      200,
-      200,
+      this.computerSize,
+      this.computerSize,
       0x003366
     );
     this.mainComputer.setInteractive();
     this.mainComputer.setDepth(0);
-    this.mainComputer.setAlpha(0.9); // Make it slightly transparent
+    this.mainComputer.setAlpha(0.9);
 
     // Add server/CPU visual elements
     const graphics = this.add.graphics();
-    graphics.lineStyle(1, 0x0099FF, 0.2); // Thinner, more transparent lines for grid
+    graphics.lineStyle(1, 0x0099FF, 0.2);
 
     // Add grid pattern
-    for (let i = -80; i <= 80; i += 40) {
+    for (let i = -this.computerSize/2; i <= this.computerSize/2; i += this.computerSize/5) {
       graphics.beginPath();
-      graphics.moveTo(this.mainComputer.x - 100, this.mainComputer.y + i);
-      graphics.lineTo(this.mainComputer.x + 100, this.mainComputer.y + i);
+      graphics.moveTo(this.mainComputer.x - this.computerSize/2, this.mainComputer.y + i);
+      graphics.lineTo(this.mainComputer.x + this.computerSize/2, this.mainComputer.y + i);
       graphics.strokePath();
 
       graphics.beginPath();
-      graphics.moveTo(this.mainComputer.x + i, this.mainComputer.y - 100);
-      graphics.lineTo(this.mainComputer.x + i, this.mainComputer.y + 100);
+      graphics.moveTo(this.mainComputer.x + i, this.mainComputer.y - this.computerSize/2);
+      graphics.lineTo(this.mainComputer.x + i, this.mainComputer.y + this.computerSize/2);
       graphics.strokePath();
     }
 
     // Add circuit-like patterns
-    graphics.lineStyle(2, 0x0066CC, 0.3); // Darker, more transparent circuit lines
+    graphics.lineStyle(2, 0x0066CC, 0.3);
     
     // Horizontal lines
+    const offset = this.computerSize * 0.3;
     graphics.beginPath();
-    graphics.moveTo(this.mainComputer.x - 90, this.mainComputer.y - 60);
-    graphics.lineTo(this.mainComputer.x + 90, this.mainComputer.y - 60);
+    graphics.moveTo(this.mainComputer.x - this.computerSize/2 + 10, this.mainComputer.y - offset);
+    graphics.lineTo(this.mainComputer.x + this.computerSize/2 - 10, this.mainComputer.y - offset);
     graphics.strokePath();
 
     graphics.beginPath();
-    graphics.moveTo(this.mainComputer.x - 90, this.mainComputer.y + 60);
-    graphics.lineTo(this.mainComputer.x + 90, this.mainComputer.y + 60);
+    graphics.moveTo(this.mainComputer.x - this.computerSize/2 + 10, this.mainComputer.y + offset);
+    graphics.lineTo(this.mainComputer.x + this.computerSize/2 - 10, this.mainComputer.y + offset);
     graphics.strokePath();
 
     // Vertical lines
     graphics.beginPath();
-    graphics.moveTo(this.mainComputer.x - 60, this.mainComputer.y - 90);
-    graphics.lineTo(this.mainComputer.x - 60, this.mainComputer.y + 90);
+    graphics.moveTo(this.mainComputer.x - offset, this.mainComputer.y - this.computerSize/2 + 10);
+    graphics.lineTo(this.mainComputer.x - offset, this.mainComputer.y + this.computerSize/2 - 10);
     graphics.strokePath();
 
     graphics.beginPath();
-    graphics.moveTo(this.mainComputer.x + 60, this.mainComputer.y - 90);
-    graphics.lineTo(this.mainComputer.x + 60, this.mainComputer.y + 90);
+    graphics.moveTo(this.mainComputer.x + offset, this.mainComputer.y - this.computerSize/2 + 10);
+    graphics.lineTo(this.mainComputer.x + offset, this.mainComputer.y + this.computerSize/2 - 10);
     graphics.strokePath();
 
     // Add corner accents
-    const cornerSize = 20;
+    const cornerSize = 15;
     const corners = [
-      { x: -100, y: -100 }, // Top-left
-      { x: 100, y: -100 },  // Top-right
-      { x: 100, y: 100 },   // Bottom-right
-      { x: -100, y: 100 }   // Bottom-left
+      { x: -this.computerSize/2, y: -this.computerSize/2 },
+      { x: this.computerSize/2, y: -this.computerSize/2 },
+      { x: this.computerSize/2, y: this.computerSize/2 },
+      { x: -this.computerSize/2, y: this.computerSize/2 }
     ];
 
-    graphics.lineStyle(2, 0x0066CC, 0.4); // Slightly more visible corner accents
+    graphics.lineStyle(2, 0x0066CC, 0.4);
     corners.forEach(corner => {
-      // Horizontal line
       graphics.beginPath();
       graphics.moveTo(this.mainComputer.x + corner.x, this.mainComputer.y + corner.y);
       graphics.lineTo(this.mainComputer.x + corner.x + (corner.x < 0 ? cornerSize : -cornerSize), this.mainComputer.y + corner.y);
       graphics.strokePath();
 
-      // Vertical line
       graphics.beginPath();
       graphics.moveTo(this.mainComputer.x + corner.x, this.mainComputer.y + corner.y);
       graphics.lineTo(this.mainComputer.x + corner.x, this.mainComputer.y + corner.y + (corner.y < 0 ? cornerSize : -cornerSize));
@@ -598,49 +598,29 @@ class MainScene extends Phaser.Scene {
     // Create the RAM bar
     this.createRamBar();
 
-    // Add production rate in the middle with more transparent background
-    const textBg = this.add.rectangle(
-      this.mainComputer.x,
-      this.mainComputer.y,
-      140,
-      30,
-      0x003366,
-      0.6
-    );
-    textBg.setDepth(1);
-
+    // Add production rate in the middle
     this.productionRateText = this.add.text(
       this.mainComputer.x,
       this.mainComputer.y,
       '2 units/sec',
       {
-        font: '18px monospace',
+        font: '14px monospace',
         fill: '#FFFFFF',
-        padding: { x: 10, y: 5 }
+        align: 'center'
       }
     );
     this.productionRateText.setOrigin(0.5);
     this.productionRateText.setDepth(2);
 
-    // Add production type text with icon at the bottom with more transparent background
-    const productionBg = this.add.rectangle(
-      this.mainComputer.x,
-      this.mainComputer.y + 30,
-      140,
-      30,
-      0x003366,
-      0.6
-    );
-    productionBg.setDepth(1);
-
+    // Add production type text with icon
     this.productionText = this.add.text(
       this.mainComputer.x,
-      this.mainComputer.y + 30,
+      this.mainComputer.y + this.computerSize/4,
       '📜 Scripts',
       {
-        font: '20px monospace',
+        font: '14px monospace',
         fill: '#FFFFFF',
-        padding: { x: 10, y: 5 }
+        align: 'center'
       }
     );
     this.productionText.setOrigin(0.5);
@@ -659,22 +639,22 @@ class MainScene extends Phaser.Scene {
     // Create module positions (2 on each side)
     const modulePositions = [
       // Top side
-      { x: this.mainComputer.x - 50, y: this.mainComputer.y - 120 },
-      { x: this.mainComputer.x + 50, y: this.mainComputer.y - 120 },
+      { x: this.mainComputer.x - this.computerSize/4, y: this.mainComputer.y - this.computerSize*0.7 },
+      { x: this.mainComputer.x + this.computerSize/4, y: this.mainComputer.y - this.computerSize*0.7 },
       // Right side
-      { x: this.mainComputer.x + 120, y: this.mainComputer.y - 50 },
-      { x: this.mainComputer.x + 120, y: this.mainComputer.y + 50 },
+      { x: this.mainComputer.x + this.computerSize*0.7, y: this.mainComputer.y - this.computerSize/4 },
+      { x: this.mainComputer.x + this.computerSize*0.7, y: this.mainComputer.y + this.computerSize/4 },
       // Bottom side
-      { x: this.mainComputer.x + 50, y: this.mainComputer.y + 120 },
-      { x: this.mainComputer.x - 50, y: this.mainComputer.y + 120 },
+      { x: this.mainComputer.x + this.computerSize/4, y: this.mainComputer.y + this.computerSize*0.7 },
+      { x: this.mainComputer.x - this.computerSize/4, y: this.mainComputer.y + this.computerSize*0.7 },
       // Left side
-      { x: this.mainComputer.x - 120, y: this.mainComputer.y + 50 },
-      { x: this.mainComputer.x - 120, y: this.mainComputer.y - 50 }
+      { x: this.mainComputer.x - this.computerSize*0.7, y: this.mainComputer.y + this.computerSize/4 },
+      { x: this.mainComputer.x - this.computerSize*0.7, y: this.mainComputer.y - this.computerSize/4 }
     ];
 
     // Create modules
     this.modules = modulePositions.map((pos, index) => {
-      const module = this.add.rectangle(pos.x, pos.y, 40, 40, 0x001B34);
+      const module = this.add.rectangle(pos.x, pos.y, 35, 35, 0x001B34);
       module.setStrokeStyle(1, 0x0099FF);
       module.setInteractive();
       module.index = index;
@@ -868,6 +848,7 @@ const GameCanvas = () => {
   const gameRef = useRef(null);
   const [selectedModule, setSelectedModule] = useState(null);
   const [showProductionMenu, setShowProductionMenu] = useState(false);
+  const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
   const gameStarted = useGameStore((state) => state.gameStarted);
   const mainComputer = useGameStore((state) => state.mainComputer);
   const produce = useGameStore((state) => state.produce);
@@ -875,6 +856,22 @@ const GameCanvas = () => {
   const productionMode = useGameStore((state) => state.productionMode);
   const getAvailableRAM = useGameStore((state) => state.getAvailableRAM);
   const getTotalRAM = useGameStore((state) => state.getTotalRAM);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight - 40 // Subtract navbar height
+      });
+      if (gameRef.current) {
+        gameRef.current.scale.resize(window.innerWidth, window.innerHeight - 40);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Production interval
   useEffect(() => {
@@ -906,11 +903,16 @@ const GameCanvas = () => {
     if (!gameRef.current) {
       const config = {
         type: Phaser.AUTO,
-        width: 800,
-        height: 600,
+        width: dimensions.width,
+        height: dimensions.height,
         backgroundColor: '#000000',
         scene: MainScene,
         parent: 'game-container',
+        scale: {
+          mode: Phaser.Scale.RESIZE,
+          width: '100%',
+          height: '100%'
+        },
         physics: {
           default: 'arcade',
           arcade: {
@@ -961,15 +963,12 @@ const GameCanvas = () => {
   };
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', width: '100vw', height: 'calc(100vh - 40px)' }}>
       <div 
         id="game-container" 
         style={{ 
-          width: '800px', 
-          height: '600px',
-          border: '1px solid #0066CC',
-          borderRadius: '8px',
-          boxShadow: '0 4px 20px rgba(0, 102, 204, 0.4)',
+          width: '100%', 
+          height: '100%',
           overflow: 'hidden'
         }}
       />
