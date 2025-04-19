@@ -26,20 +26,36 @@ class MainScene extends Phaser.Scene {
     const x = this.mainComputer.x - barWidth/2;
     const y = this.mainComputer.y - this.computerSize/4;
 
+    // Add RAM label text
+    this.ramLabel = this.add.text(
+      x + barWidth/2,
+      y - 16,
+      'RAM for Production',
+      {
+        font: 'bold 13px monospace',
+        fill: '#00CCFF',
+        align: 'center'
+      }
+    );
+    this.ramLabel.setOrigin(0.5);
+    this.ramLabel.setDepth(2);
+    // Add subtle glow effect
+    this.ramLabel.setShadow(0, 0, '#0066CC', 8, true, true);
+
     // Create container rectangle with border
     this.ramBarContainer = this.add.rectangle(x + barWidth/2, y, barWidth, barHeight, 0x001B34);
     this.ramBarContainer.setStrokeStyle(1, 0x0099FF);
     this.ramBarContainer.setDepth(1);
 
-    // Create the dark blue background (available RAM)
-    this.ramBarAvailable = this.add.rectangle(x, y, barWidth, barHeight, 0x002B44);
+    // Create the dark background (total RAM)
+    this.ramBarBackground = this.add.rectangle(x, y, barWidth, barHeight, 0x001B34);
+    this.ramBarBackground.setOrigin(0, 0.5);
+    this.ramBarBackground.setDepth(1);
+    
+    // Create the blue bar (available RAM for production)
+    this.ramBarAvailable = this.add.rectangle(x, y, barWidth, barHeight, 0x0066CC);
     this.ramBarAvailable.setOrigin(0, 0.5);
     this.ramBarAvailable.setDepth(1);
-    
-    // Create the blue overlay (used RAM)
-    this.ramBarUsed = this.add.rectangle(x, y, 0, barHeight, 0x0066CC);
-    this.ramBarUsed.setOrigin(0, 0.5);
-    this.ramBarUsed.setDepth(1);
 
     // Add RAM text
     this.ramText = this.add.text(
@@ -63,14 +79,30 @@ class MainScene extends Phaser.Scene {
     const usedByFirewalls = this.modules.filter(m => m.type === 'firewall').length * 2;
     const availableRAM = totalRAM - usedByFirewalls;
 
-    const barWidth = 140;  // Match the width from createRamBar
-    const usedWidth = Math.max(0, barWidth * (usedByFirewalls/totalRAM));
+    const barWidth = this.computerSize * 0.8;
+    
+    // Update the background bar (total possible RAM)
+    this.ramBarBackground.width = barWidth;
+    
+    // Update the blue bar (available RAM for production)
+    this.ramBarAvailable.width = barWidth * (availableRAM / totalRAM);
+    
+    // Color coding based on available RAM
+    if (availableRAM <= 2) {
+      this.ramBarBackground.setFillStyle(0x331111); // Dark red background
+      this.ramBarAvailable.setFillStyle(0x990000); // Red for available
+    } else {
+      this.ramBarBackground.setFillStyle(0x001B34); // Dark background
+      this.ramBarAvailable.setFillStyle(0x0066CC); // Blue for available
+    }
 
-    // Update the blue bar (used RAM)
-    this.ramBarUsed.width = usedWidth;
-
-    // Update the text
+    // Update the text to show available/total
     this.ramText.setText(`${availableRAM}/${totalRAM}GB`);
+    if (availableRAM <= 2) {
+      this.ramText.setColor('#FF9999');
+    } else {
+      this.ramText.setColor('#FFFFFF');
+    }
 
     // Update production rate
     const rate = Math.floor(availableRAM / 2);
